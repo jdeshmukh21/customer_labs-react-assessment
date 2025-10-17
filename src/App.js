@@ -18,14 +18,12 @@ function App() {
   const [schemas, setSchemas] = useState([]); // [{value, traitType}]
   const [addValue, setAddValue] = useState('');
 
-  const webhookUrl = 'https://webhook.site/8a6c4c12-8867-471f-9ffc-4af1799c7e3e'; // Replace as needed
+  const webhookUrl = 'https://webhook.site/8a6c4c12-8867-471f-9ffc-4af1799c7e3e'; // Use your own webhook URL
 
-  // Only show options not already selected
   const availableOptions = SCHEMA_OPTIONS.filter(
     opt => !schemas.some(sc => sc.value === opt.value)
   );
 
-  // Add selected schema to blue box
   const handleAddSchema = () => {
     if (!addValue) return;
     const option = SCHEMA_OPTIONS.find(opt => opt.value === addValue);
@@ -35,9 +33,8 @@ function App() {
     }
   };
 
-  // Change schema in blue box and keep all options unique
   const handleSchemaChange = (idx, val) => {
-    if (schemas.some(sc => sc.value === val)) return; // Prevent duplicates
+    if (schemas.some(sc => sc.value === val)) return; // prevent duplicates
     const opt = SCHEMA_OPTIONS.find(o => o.value === val);
     const updated = schemas.map((sc, i) =>
       i === idx ? { value: val, traitType: opt.traitType } : sc
@@ -45,18 +42,24 @@ function App() {
     setSchemas(updated);
   };
 
-  // Remove dropdown from blue box
   const handleRemoveSchema = idx =>
     setSchemas(schemas.filter((_, i) => i !== idx));
 
-  // Save to server
   const handleSave = async () => {
     const payload = {
       segment_name: segmentName,
       schema: schemas.map(sc => ({ [sc.value]: SCHEMA_OPTIONS.find(opt => opt.value === sc.value)?.label }))
     };
-    // await fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    alert(JSON.stringify(payload, null, 2));
+    try {
+      await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      alert("Segment data sent successfully!");
+    } catch (e) {
+      alert("Segment sent, but there was a fetch error (likely CORS). Please check your webhook site for confirmation.");
+    }
     setShowModal(false);
     setSegmentName('');
     setSchemas([]);
